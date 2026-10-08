@@ -1,6 +1,7 @@
 <Window x:Class="Snapr.Capture.CaptureOverlayWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:loc="clr-namespace:Snapr.Localization"
         Title="Snapr capture"
         WindowStyle="None"
         ResizeMode="NoResize"
@@ -27,7 +28,7 @@
             </Border>
             <Border x:Name="Hint" Background="#E62C2C2E" CornerRadius="8" Padding="12,7">
                 <TextBlock Foreground="#F2F2F7" FontSize="13" FontFamily="Segoe UI"
-                           Text="Sleep om een gebied te kiezen  ·  Klik voor dit scherm  ·  Enter voor alle schermen  ·  Esc annuleert" />
+                           Text="{x:Static loc:Strings.CaptureHint}" />
             </Border>
         </Canvas>
     </Grid>
