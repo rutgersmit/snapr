@@ -1,10 +1,16 @@
 name: Release
 
-# Push a version tag to publish a release with Snapr.exe attached:
-#   git tag v0.2.0 && git push origin v0.2.0
+# Builds Snapr.exe and attaches it to a GitHub release.
+# - Publish a release on GitHub (any tag, e.g. "0.2" or "v0.2.0") and the exe is added automatically.
+# - Or run this workflow by hand with an existing release tag to (re)attach the exe.
 on:
-  push:
-    tags: ["v*"]
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag of an existing release
+        required: true
 
 permissions:
   contents: write
@@ -12,8 +18,12 @@ permissions:
 jobs:
   release:
     runs-on: windows-latest
+    env:
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
 
       - uses: actions/setup-dotnet@v4
         with:
@@ -22,13 +32,14 @@ jobs:
       - name: Publish single-file exe
         shell: pwsh
         run: |
-          $version = "${{ github.ref_name }}".TrimStart('v')
+          # "v0.2.0" or "0.2" -> "0.2.0"/"0.2"; anything after a dash (e.g. "-beta") is kept as a prerelease label.
+          $version = $env:TAG.TrimStart('v', 'V')
           dotnet publish src/Snapr/Snapr.csproj -c Release -r win-x64 --self-contained true `
             -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true `
             -p:Version=$version -o publish
 
-      - name: Create GitHub release
+      - name: Attach Snapr.exe to the release
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "${{ github.ref_name }}" publish/Snapr.exe --title "Snapr ${{ github.ref_name }}" --generate-notes
+        run: gh release upload $env:TAG publish/Snapr.exe --clobber

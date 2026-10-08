@@ -19,7 +19,7 @@ Een kleine screenshot-tool voor Windows, geïnspireerd op [Shottr](https://shott
 
 De nieuwste versie staat onder *Releases* als losse `Snapr.exe` (self-contained, geen .NET-installatie nodig). De exe is niet ondertekend, dus Windows SmartScreen waarschuwt de eerste keer: kies *Meer info › Toch uitvoeren*.
 
-Een release maken: push een versietag, bijvoorbeeld `git tag v0.2.0 && git push origin v0.2.0`. De workflow bouwt de exe met dat versienummer en zet hem bij de release.
+Een release maken: maak op GitHub een nieuwe release aan (*Releases › Draft a new release*) met een tag als `0.2` of `v0.2.0` en publiceer hem. De Release-workflow bouwt dan de exe met dat versienummer en hangt `Snapr.exe` er een paar minuten later aan. Voor een bestaande release zonder exe: *Actions › Release › Run workflow* met de tag.
 
 Tussentijdse builds van elke push staan onder *Actions › Build › Artifacts*.
 
