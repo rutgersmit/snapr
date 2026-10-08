@@ -49,8 +49,8 @@ public sealed class ArrowAnnotation : IAnnotation
         double t = _thickness;
         double headLength = Math.Min(t * 3.2, length * 0.6);
         double headHalfWidth = Math.Max(t * 2.3, headLength * 0.6);
-        double shaftHalfWidth = t * 0.75;
-        double tailHalfWidth = t * 0.55;
+        double shaftHalfWidth = t / 2;
+        double tailHalfWidth = t * 0.45;
         var headBase = End - dir * headLength;
 
         // Outline from tail round to the tip and back, each corner with its own rounding radius.
