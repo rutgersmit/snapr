@@ -4,6 +4,7 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using Microsoft.Win32;
 using Snapr.Interop;
+using Snapr.Localization;
 using Snapr.Services;
 
 namespace Snapr.Settings;
@@ -30,7 +31,7 @@ public partial class SettingsWindow : Window
 
     // ---- Hotkey recorder -----------------------------------------------------------------
 
-    private void OnHotkeyFocus(object sender, KeyboardFocusChangedEventArgs e) => HotkeyBox.Text = "Druk op een toetscombinatie…";
+    private void OnHotkeyFocus(object sender, KeyboardFocusChangedEventArgs e) => HotkeyBox.Text = Strings.PressShortcut;
 
     private void OnHotkeyBlur(object sender, KeyboardFocusChangedEventArgs e) => HotkeyBox.Text = _hotkey.ToString();
 
@@ -79,7 +80,7 @@ public partial class SettingsWindow : Window
 
     private void OnBrowse(object sender, RoutedEventArgs e)
     {
-        var dialog = new OpenFolderDialog { Title = "Kies opslagmap" };
+        var dialog = new OpenFolderDialog { Title = Strings.ChooseSaveFolder };
         if (System.IO.Directory.Exists(FolderBox.Text)) dialog.InitialDirectory = FolderBox.Text;
         if (dialog.ShowDialog(this) == true) FolderBox.Text = dialog.FolderName;
     }

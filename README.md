@@ -12,6 +12,7 @@ Een kleine screenshot-tool voor Windows, geïnspireerd op [Shottr](https://shott
 - Ongedaan maken / opnieuw (`Ctrl+Z` / `Ctrl+Y`), kopiëren (`Ctrl+C`), opslaan als PNG (`Ctrl+S`), sluiten (`Esc`).
 - De screenshot staat direct op het klembord; sluit je de editor na bewerken, dan staat de bewerkte versie op het klembord.
 - Optioneel automatisch starten met Windows.
+- **Taal**: Engels, of Nederlands als de weergavetaal van Windows Nederlands is.
 
 ## Downloaden
 

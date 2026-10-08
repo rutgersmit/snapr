@@ -12,6 +12,7 @@ using System.Windows.Media.Imaging;
 using Microsoft.Win32;
 using Snapr.Editor.Annotations;
 using Snapr.Interop;
+using Snapr.Localization;
 using Snapr.Services;
 
 namespace Snapr.Editor;
@@ -214,11 +215,11 @@ public partial class EditorWindow : Window
         if (ClipboardHelper.TrySetImage(Flatten()))
         {
             _changedSinceCopy = false;
-            ShowStatus("Gekopieerd naar klembord");
+            ShowStatus(Strings.Copied);
         }
         else
         {
-            ShowStatus("Klembord is bezet, probeer opnieuw");
+            ShowStatus(Strings.ClipboardBusy);
         }
     }
 
@@ -227,7 +228,7 @@ public partial class EditorWindow : Window
         var settings = App.Current.Settings;
         var dialog = new SaveFileDialog
         {
-            Filter = "PNG-afbeelding (*.png)|*.png",
+            Filter = Strings.PngFilter,
             FileName = $"Snapr {DateTime.Now:yyyy-MM-dd HH.mm.ss}.png",
             DefaultExt = ".png",
         };
@@ -246,11 +247,11 @@ public partial class EditorWindow : Window
         try
         {
             Renderer.SavePng(Flatten(), dialog.FileName);
-            ShowStatus($"Opgeslagen: {Path.GetFileName(dialog.FileName)}");
+            ShowStatus(Strings.Saved(Path.GetFileName(dialog.FileName)));
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            MessageBox.Show(this, $"Opslaan mislukt:\n{ex.Message}", "Snapr", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show(this, Strings.SaveFailed(ex.Message), "Snapr", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 

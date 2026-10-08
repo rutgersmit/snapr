@@ -6,6 +6,7 @@ using System.Windows;
 using Snapr.Capture;
 using Snapr.Editor;
 using Snapr.Interop;
+using Snapr.Localization;
 using Snapr.Services;
 using Snapr.Settings;
 using Forms = System.Windows.Forms;
@@ -68,15 +69,14 @@ public partial class App : Application
         if (_hotkeys.Register(gesture))
         {
             if (showSuccess)
-                ShowBalloon("Snapr draait", $"Druk op {gesture} om een screenshot te maken.");
+                ShowBalloon(Strings.RunningTitle, Strings.RunningText(gesture.ToString()));
             return;
         }
 
         string message = gesture.Key == System.Windows.Input.Key.Snapshot
-            ? "PrintScreen is al in gebruik. Zet in Windows-instellingen > Toegankelijkheid > Toetsenbord " +
-              "\"Knipprogramma openen met PrtSc\" uit, of kies een andere sneltoets."
-            : $"{gesture} is al in gebruik door een ander programma. Kies een andere sneltoets.";
-        ShowBalloon("Sneltoets niet beschikbaar", message, Forms.ToolTipIcon.Warning);
+            ? Strings.PrintScreenInUse
+            : Strings.HotkeyInUse(gesture.ToString());
+        ShowBalloon(Strings.HotkeyUnavailableTitle, message, Forms.ToolTipIcon.Warning);
     }
 
     public void SuspendHotkey() => _hotkeys?.Unregister();
@@ -128,7 +128,7 @@ public partial class App : Application
         }
         catch (Exception ex) when (ex is UnauthorizedAccessException or System.Security.SecurityException)
         {
-            ShowBalloon("Snapr", "Kon 'start met Windows' niet instellen.", Forms.ToolTipIcon.Warning);
+            ShowBalloon("Snapr", Strings.StartupFailed, Forms.ToolTipIcon.Warning);
         }
     }
 
@@ -137,10 +137,10 @@ public partial class App : Application
         _trayIcon = CreateAppIcon();
 
         var menu = new Forms.ContextMenuStrip();
-        menu.Items.Add("Screenshot maken", null, (_, _) => StartCapture());
-        menu.Items.Add("Instellingen…", null, (_, _) => ShowSettings());
+        menu.Items.Add(Strings.TrayCapture, null, (_, _) => StartCapture());
+        menu.Items.Add(Strings.TraySettings, null, (_, _) => ShowSettings());
         menu.Items.Add(new Forms.ToolStripSeparator());
-        menu.Items.Add("Afsluiten", null, (_, _) => Shutdown());
+        menu.Items.Add(Strings.TrayExit, null, (_, _) => Shutdown());
 
         _tray = new Forms.NotifyIcon
         {
