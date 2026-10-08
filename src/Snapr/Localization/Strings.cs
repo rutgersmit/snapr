@@ -32,6 +32,10 @@ public static class Strings
         $"{hotkey} is already in use by another program. Choose a different shortcut.",
         $"{hotkey} is al in gebruik door een ander programma. Kies een andere sneltoets.");
 
+    public static string UnexpectedError(string message, string logPath) => T(
+        $"Something went wrong, but Snapr keeps running.\n\n{message}\n\nDetails were written to:\n{logPath}",
+        $"Er ging iets mis, maar Snapr blijft draaien.\n\n{message}\n\nDetails staan in:\n{logPath}");
+
     public static string StartupFailed => T("Could not set 'Start with Windows'.", "Kon 'start met Windows' niet instellen.");
 
     // ---- Capture overlay -----------------------------------------------------------------

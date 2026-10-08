@@ -1,7 +1,9 @@
 using System;
 using System.Drawing;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
 using Snapr.Capture;
 using Snapr.Editor;
 using Snapr.Localization;
@@ -19,6 +21,7 @@ public partial class App : Application
     private Icon? _trayIcon;
     private CaptureOverlayWindow? _overlay;
     private SettingsWindow? _settingsWindow;
+    private bool _showingError;
 
     public AppSettings Settings { get; private set; } = new();
 
@@ -27,6 +30,7 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        HookUnhandledExceptions();
 
         _singleInstance = new Mutex(true, @"Local\Snapr.SingleInstance", out bool isFirst);
         if (!isFirst)
@@ -83,7 +87,15 @@ public partial class App : Application
         if (_overlay is not null) return;
 
         var shot = ScreenCapture.CaptureVirtualScreen();
-        _overlay = new CaptureOverlayWindow(shot);
+        try
+        {
+            _overlay = new CaptureOverlayWindow(shot);
+        }
+        catch
+        {
+            _overlay = null; // otherwise every later capture would be ignored
+            throw;
+        }
         _overlay.Closed += (_, _) =>
         {
             var result = _overlay.Result;
@@ -128,6 +140,52 @@ public partial class App : Application
             ShowBalloon("Snapr", Strings.StartupFailed, Forms.ToolTipIcon.Warning);
         }
     }
+
+    // ---- Error handling ------------------------------------------------------------------
+
+    /// <summary>
+    /// A tray app that dies silently also takes the hotkey with it, so log every unexpected
+    /// error, tell the user once, and keep running wherever .NET allows it.
+    /// </summary>
+    private void HookUnhandledExceptions()
+    {
+        DispatcherUnhandledException += (_, e) =>
+        {
+            ReportError(e.Exception, "UI");
+            e.Handled = true;
+        };
+        // Tray menu clicks run through WinForms, which has its own handler.
+        Forms.Application.ThreadException += (_, e) => ReportError(e.Exception, "Tray");
+        TaskScheduler.UnobservedTaskException += (_, e) =>
+        {
+            ErrorLog.Write(e.Exception, "Task");
+            e.SetObserved();
+        };
+        // Not recoverable, but at least leave a trace.
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+        {
+            if (e.ExceptionObject is Exception ex) ErrorLog.Write(ex, "Fatal");
+        };
+    }
+
+    private void ReportError(Exception exception, string source)
+    {
+        ErrorLog.Write(exception, source);
+        if (_showingError) return; // one dialog at a time, even if errors repeat
+
+        _showingError = true;
+        try
+        {
+            MessageBox.Show(Strings.UnexpectedError(exception.Message, ErrorLog.FilePath), "Snapr",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+        finally
+        {
+            _showingError = false;
+        }
+    }
+
+    // ---- Tray ----------------------------------------------------------------------------
 
     private void CreateTrayIcon()
     {

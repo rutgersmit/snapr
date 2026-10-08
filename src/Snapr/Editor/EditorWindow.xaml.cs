@@ -143,7 +143,7 @@ public partial class EditorWindow : Window
     private int NextNumber => _annotations.OfType<NumberAnnotation>().Select(n => n.Number).DefaultIfEmpty(0).Max() + 1;
 
     /// <summary>Blocks large enough that text inside cannot be read, scaled with display DPI.</summary>
-    private int PixelBlockSize => (int)Math.Max(10, Math.Round(12 * _dpiScale));
+    private int PixelBlockSize => (int)Math.Max(12, Math.Round(14 * _dpiScale));
 
     private Point ClampToImage(Point p) => new(
         Math.Clamp(p.X, 0, _image.PixelWidth),
