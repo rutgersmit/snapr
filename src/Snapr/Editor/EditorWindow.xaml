@@ -4,6 +4,7 @@
         xmlns:editor="clr-namespace:Snapr.Editor"
         xmlns:loc="clr-namespace:Snapr.Localization"
         Title="Snapr"
+        Icon="/Assets/snapr.ico"
         Background="{StaticResource WindowBackground}"
         SizeToContent="WidthAndHeight"
         MinWidth="580" MinHeight="260"

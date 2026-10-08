@@ -1,16 +1,13 @@
 using System;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.Threading;
 using System.Windows;
 using Snapr.Capture;
 using Snapr.Editor;
-using Snapr.Interop;
 using Snapr.Localization;
 using Snapr.Services;
 using Snapr.Settings;
 using Forms = System.Windows.Forms;
-using Point = System.Drawing.Point;
 
 namespace Snapr;
 
@@ -55,7 +52,7 @@ public partial class App : Application
             _tray.Visible = false;
             _tray.Dispose();
         }
-        if (_trayIcon is not null) NativeMethods.DestroyIcon(_trayIcon.Handle);
+        _trayIcon?.Dispose();
         _singleInstance?.Dispose();
         base.OnExit(e);
     }
@@ -158,31 +155,11 @@ public partial class App : Application
     private void ShowBalloon(string title, string text, Forms.ToolTipIcon icon = Forms.ToolTipIcon.Info)
         => _tray?.ShowBalloonTip(4000, title, text, icon);
 
-    /// <summary>Draws the tray icon: a blue rounded square with white viewfinder corners.</summary>
+    /// <summary>Loads the app icon (Assets/snapr.ico) at the tray's DPI-aware small icon size.</summary>
     private static Icon CreateAppIcon()
     {
-        const int size = 32;
-        using var bitmap = new Bitmap(size, size);
-        using (var g = Graphics.FromImage(bitmap))
-        {
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-            using var background = new GraphicsPath();
-            const int r = 8;
-            background.AddArc(1, 1, r * 2, r * 2, 180, 90);
-            background.AddArc(size - 1 - r * 2, 1, r * 2, r * 2, 270, 90);
-            background.AddArc(size - 1 - r * 2, size - 1 - r * 2, r * 2, r * 2, 0, 90);
-            background.AddArc(1, size - 1 - r * 2, r * 2, r * 2, 90, 90);
-            background.CloseFigure();
-            using var fill = new SolidBrush(Color.FromArgb(10, 132, 255));
-            g.FillPath(fill, background);
-
-            using var pen = new Pen(Color.White, 3) { StartCap = LineCap.Round, EndCap = LineCap.Round };
-            const int a = 8, b = 24, l = 6;
-            g.DrawLines(pen, new[] { new Point(a, a + l), new Point(a, a), new Point(a + l, a) });
-            g.DrawLines(pen, new[] { new Point(b - l, a), new Point(b, a), new Point(b, a + l) });
-            g.DrawLines(pen, new[] { new Point(b, b - l), new Point(b, b), new Point(b - l, b) });
-            g.DrawLines(pen, new[] { new Point(a + l, b), new Point(a, b), new Point(a, b - l) });
-        }
-        return Icon.FromHandle(bitmap.GetHicon());
+        var resource = GetResourceStream(new Uri("pack://application:,,,/Assets/snapr.ico"))!;
+        using var stream = resource.Stream;
+        return new Icon(stream, Forms.SystemInformation.SmallIconSize);
     }
 }

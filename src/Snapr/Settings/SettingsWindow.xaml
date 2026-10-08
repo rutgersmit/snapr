@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:loc="clr-namespace:Snapr.Localization"
         Title="{x:Static loc:Strings.SettingsTitle}"
+        Icon="/Assets/snapr.ico"
         Width="460" SizeToContent="Height"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
