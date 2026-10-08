@@ -268,7 +268,7 @@ public partial class EditorWindow : Window
     private int NextNumber => _annotations.OfType<NumberAnnotation>().Select(n => n.Number).DefaultIfEmpty(0).Max() + 1;
 
     /// <summary>Blocks large enough that text inside cannot be read, scaled with display DPI.</summary>
-    private int PixelBlockSize => (int)Math.Max(12, Math.Round(14 * _dpiScale));
+    private int PixelBlockSize => (int)Math.Max(8, Math.Round(9 * _dpiScale));
 
     /// <summary>Limits a move so every handle stays on the image, keeping the shape intact.</summary>
     private Vector ClampMove(IReadOnlyList<Point> handles, Vector delta)
