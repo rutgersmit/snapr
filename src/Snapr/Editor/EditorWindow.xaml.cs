@@ -21,9 +21,11 @@ public partial class EditorWindow : Window
 {
     private enum Tool { Arrow, Pixelate, Number }
 
+    private enum Drag { None, Create, Move, Handle }
+
     private readonly BitmapSource _image;
     private readonly List<IAnnotation> _annotations = new();
-    private readonly Stack<IAnnotation> _redo = new();
+    private readonly EditHistory _history;
 
     private Tool _tool = Tool.Arrow;
     private Color _color = Color.FromRgb(0xFF, 0x3B, 0x30);
@@ -31,10 +33,17 @@ public partial class EditorWindow : Window
     private IAnnotation? _pending;
     private bool _changedSinceCopy;
 
+    private IEditableAnnotation? _selected;
+    private Drag _drag;
+    private Point _dragStart;
+    private IReadOnlyList<Point> _dragOriginal = Array.Empty<Point>();
+    private int _dragHandle;
+
     public EditorWindow(BitmapSource image)
     {
         InitializeComponent();
         _image = image;
+        _history = new EditHistory(_annotations);
 
         BaseImage.Source = image;
         Surface.Width = image.PixelWidth;
@@ -64,6 +73,7 @@ public partial class EditorWindow : Window
     {
         _dpiScale = dpi.DpiScaleX;
         DpiScale.ScaleX = DpiScale.ScaleY = 1 / _dpiScale;
+        Layer.HandleRadius = 5 * _dpiScale;
 
         UpdateWorkAreaLimits();
     }
@@ -89,54 +99,169 @@ public partial class EditorWindow : Window
     private void OnSurfaceMouseDown(object sender, MouseButtonEventArgs e)
     {
         var p = e.GetPosition(Surface);
-        _pending = _tool switch
+
+        if (_selected is not null && HandleAt(_selected, p) is int handle)
         {
-            Tool.Arrow => new ArrowAnnotation(p, _color, Math.Round(7 * _dpiScale)),
-            Tool.Number => new NumberAnnotation(p, NextNumber, _color, Math.Round(26 * _dpiScale)),
-            _ => new PixelateAnnotation(_image, p, PixelBlockSize),
-        };
-        Layer.Pending = _pending;
+            BeginEdit(Drag.Handle, p, handle);
+        }
+        else if (AnnotationAt(p) is { } hit)
+        {
+            // Clicking an existing arrow or number selects it and starts moving it, whatever the tool.
+            Select(hit);
+            BeginEdit(Drag.Move, p, -1);
+        }
+        else
+        {
+            Select(null);
+            _pending = _tool switch
+            {
+                Tool.Arrow => new ArrowAnnotation(p, _color, Math.Round(7 * _dpiScale)),
+                Tool.Number => new NumberAnnotation(p, NextNumber, _color, Math.Round(26 * _dpiScale)),
+                _ => new PixelateAnnotation(_image, p, PixelBlockSize),
+            };
+            Layer.Pending = _pending;
+            _drag = Drag.Create;
+        }
+
         Surface.CaptureMouse();
         e.Handled = true;
     }
 
+    private void BeginEdit(Drag drag, Point start, int handle)
+    {
+        _drag = drag;
+        _dragStart = start;
+        _dragHandle = handle;
+        _dragOriginal = _selected!.Handles;
+    }
+
     private void OnSurfaceMouseMove(object sender, MouseEventArgs e)
     {
-        if (_pending is null) return;
-
-        var p = ClampToImage(e.GetPosition(Surface));
-        switch (_pending)
+        var p = e.GetPosition(Surface);
+        switch (_drag)
         {
-            case ArrowAnnotation arrow: arrow.End = p; break;
-            case PixelateAnnotation pixelate: pixelate.Update(p); break;
-            case NumberAnnotation number: number.Center = p; break; // drag to fine-tune the position
+            case Drag.None:
+                UpdateCursor(p);
+                return;
+
+            case Drag.Move:
+                var delta = ClampMove(_dragOriginal, p - _dragStart);
+                _selected!.Handles = _dragOriginal.Select(h => h + delta).ToArray();
+                break;
+
+            case Drag.Handle:
+                var handles = _dragOriginal.ToArray();
+                handles[_dragHandle] = ClampToImage(p);
+                _selected!.Handles = handles;
+                break;
+
+            case Drag.Create:
+                p = ClampToImage(p);
+                switch (_pending)
+                {
+                    case ArrowAnnotation arrow: arrow.End = p; break;
+                    case PixelateAnnotation pixelate: pixelate.Update(p); break;
+                    case NumberAnnotation number: number.Center = p; break; // drag to fine-tune the position
+                }
+                break;
         }
         Layer.InvalidateVisual();
     }
 
-    private void OnSurfaceMouseUp(object sender, MouseButtonEventArgs e)
+    private void OnSurfaceMouseUp(object sender, MouseButtonEventArgs e) => FinishDrag();
+
+    // E.g. Alt+Tab mid-drag: keep what was dragged so far instead of leaving the editor stuck.
+    private void OnSurfaceLostMouseCapture(object sender, MouseEventArgs e) => FinishDrag();
+
+    private void FinishDrag()
     {
-        if (_pending is null) return;
+        if (_drag == Drag.None) return;
+        var drag = _drag;
+        _drag = Drag.None; // before releasing, which raises LostMouseCapture again
         Surface.ReleaseMouseCapture();
 
-        var finished = _pending;
-        _pending = null;
-        Layer.Pending = null;
-
-        bool empty = finished switch
+        if (drag is Drag.Move or Drag.Handle)
         {
-            ArrowAnnotation arrow => arrow.IsTooShort,
-            PixelateAnnotation pixelate => pixelate.IsEmpty,
-            _ => false,
-        };
-        if (!empty)
-        {
-            _annotations.Add(finished);
-            _redo.Clear();
-            _changedSinceCopy = true;
+            if (!_selected!.Handles.SequenceEqual(_dragOriginal))
+            {
+                _history.RecordReshape(_selected, _dragOriginal);
+                _changedSinceCopy = true;
+            }
         }
+        else if (_pending is { } finished)
+        {
+            _pending = null;
+            Layer.Pending = null;
+
+            bool empty = finished switch
+            {
+                ArrowAnnotation arrow => arrow.IsTooShort,
+                PixelateAnnotation pixelate => pixelate.IsEmpty,
+                _ => false,
+            };
+            if (!empty)
+            {
+                _history.Add(finished);
+                _changedSinceCopy = true;
+            }
+        }
+
         Layer.InvalidateVisual();
         UpdateButtons();
+    }
+
+    // ---- Selection -----------------------------------------------------------------------
+
+    private double HitTolerance => 4 * _dpiScale;
+
+    /// <summary>The topmost arrow or number under <paramref name="p"/>.</summary>
+    private IEditableAnnotation? AnnotationAt(Point p)
+    {
+        for (int i = _annotations.Count - 1; i >= 0; i--)
+        {
+            if (_annotations[i] is IEditableAnnotation editable && editable.HitTest(p, HitTolerance))
+                return editable;
+        }
+        return null;
+    }
+
+    /// <summary>Index of the arrow end point under <paramref name="p"/>, if any.</summary>
+    private int? HandleAt(IEditableAnnotation annotation, Point p)
+    {
+        var handles = annotation.Handles;
+        if (handles.Count < 2) return null;
+        for (int i = 0; i < handles.Count; i++)
+        {
+            if ((handles[i] - p).Length <= Layer.HandleRadius + HitTolerance)
+                return i;
+        }
+        return null;
+    }
+
+    private void Select(IEditableAnnotation? annotation)
+    {
+        _selected = annotation;
+        Layer.Selected = annotation;
+        Layer.InvalidateVisual();
+    }
+
+    private void DeleteSelected()
+    {
+        if (_selected is null) return;
+        _history.Remove(_selected);
+        _changedSinceCopy = true;
+        Select(null);
+        UpdateButtons();
+    }
+
+    private void UpdateCursor(Point p)
+    {
+        if (_selected is not null && HandleAt(_selected, p) is not null)
+            Surface.Cursor = Cursors.Hand;
+        else if (AnnotationAt(p) is not null)
+            Surface.Cursor = Cursors.SizeAll;
+        else
+            Surface.Cursor = Cursors.Cross;
     }
 
     /// <summary>Each click counts up; undoing a marker gives its number back.</summary>
@@ -144,6 +269,16 @@ public partial class EditorWindow : Window
 
     /// <summary>Blocks large enough that text inside cannot be read, scaled with display DPI.</summary>
     private int PixelBlockSize => (int)Math.Max(12, Math.Round(14 * _dpiScale));
+
+    /// <summary>Limits a move so every handle stays on the image, keeping the shape intact.</summary>
+    private Vector ClampMove(IReadOnlyList<Point> handles, Vector delta)
+    {
+        double minX = handles.Min(h => h.X), maxX = handles.Max(h => h.X);
+        double minY = handles.Min(h => h.Y), maxY = handles.Max(h => h.Y);
+        return new Vector(
+            Math.Clamp(delta.X, -minX, _image.PixelWidth - maxX),
+            Math.Clamp(delta.Y, -minY, _image.PixelHeight - maxY));
+    }
 
     private Point ClampToImage(Point p) => new(
         Math.Clamp(p.X, 0, _image.PixelWidth),
@@ -157,6 +292,7 @@ public partial class EditorWindow : Window
     private void SelectTool(Tool tool)
     {
         _tool = tool;
+        Select(null);
         ArrowTool.IsChecked = tool == Tool.Arrow;
         PixelateTool.IsChecked = tool == Tool.Pixelate;
         NumberTool.IsChecked = tool == Tool.Number;
@@ -181,18 +317,22 @@ public partial class EditorWindow : Window
 
     private void Undo()
     {
-        if (_annotations.Count == 0) return;
-        _redo.Push(_annotations[^1]);
-        _annotations.RemoveAt(_annotations.Count - 1);
-        _changedSinceCopy = true;
-        Layer.InvalidateVisual();
-        UpdateButtons();
+        if (!_history.CanUndo) return;
+        _history.Undo();
+        AfterHistoryChange();
     }
 
     private void Redo()
     {
-        if (_redo.Count == 0) return;
-        _annotations.Add(_redo.Pop());
+        if (!_history.CanRedo) return;
+        _history.Redo();
+        AfterHistoryChange();
+    }
+
+    private void AfterHistoryChange()
+    {
+        // The selected annotation may just have been removed again.
+        if (_selected is not null && !_annotations.Contains(_selected)) Select(null);
         _changedSinceCopy = true;
         Layer.InvalidateVisual();
         UpdateButtons();
@@ -200,8 +340,8 @@ public partial class EditorWindow : Window
 
     private void UpdateButtons()
     {
-        UndoButton.IsEnabled = _annotations.Count > 0;
-        RedoButton.IsEnabled = _redo.Count > 0;
+        UndoButton.IsEnabled = _history.CanUndo;
+        RedoButton.IsEnabled = _history.CanRedo;
     }
 
     private void OnCopy(object sender, RoutedEventArgs e) => Copy();
@@ -266,7 +406,9 @@ public partial class EditorWindow : Window
 
         switch (e.Key)
         {
+            case Key.Escape when _selected is not null: Select(null); break;
             case Key.Escape: Close(); break;
+            case Key.Delete or Key.Back when _selected is not null: DeleteSelected(); break;
             case Key.Z when ctrl && shift: Redo(); break;
             case Key.Z when ctrl: Undo(); break;
             case Key.Y when ctrl: Redo(); break;

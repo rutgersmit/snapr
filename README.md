@@ -9,6 +9,7 @@ Een kleine screenshot-tool voor Windows, geïnspireerd op [Shottr](https://shott
 - **Pijlen** (`A`) in vijf kleuren (`1`–`5`).
 - **Pixeleren** (`P`): sleep over tekst om die onleesbaar te maken. Elk blok krijgt een beetje willekeurige ruis, zodat de tekst ook niet met tools als Depix terug te rekenen is.
 - **Nummers** (`N`): elke klik plaatst het volgende nummer (1, 2, 3, …) in een gekleurd afgerond vierkantje; slepen om de plek te verfijnen.
+- **Verplaatsen**: klik op een pijl of nummer om hem te selecteren en sleep hem naar een andere plek. Sleep een uiteinde van een geselecteerde pijl om richting en lengte aan te passen. `Delete` verwijdert de selectie, `Esc` deselecteert.
 - Ongedaan maken / opnieuw (`Ctrl+Z` / `Ctrl+Y`), kopiëren (`Ctrl+C`), opslaan als PNG (`Ctrl+S`), sluiten (`Esc`).
 - De screenshot staat direct op het klembord; sluit je de editor na bewerken, dan staat de bewerkte versie op het klembord.
 - Optioneel automatisch starten met Windows.

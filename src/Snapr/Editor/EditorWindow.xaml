@@ -83,7 +83,8 @@
                     <Grid x:Name="Surface" Cursor="Cross" Background="Transparent"
                           MouseLeftButtonDown="OnSurfaceMouseDown"
                           MouseMove="OnSurfaceMouseMove"
-                          MouseLeftButtonUp="OnSurfaceMouseUp">
+                          MouseLeftButtonUp="OnSurfaceMouseUp"
+                          LostMouseCapture="OnSurfaceLostMouseCapture">
                         <Grid.LayoutTransform>
                             <ScaleTransform x:Name="DpiScale" />
                         </Grid.LayoutTransform>

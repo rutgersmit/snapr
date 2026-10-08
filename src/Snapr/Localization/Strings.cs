@@ -62,8 +62,8 @@ public static class Strings
     public static string Save => T("Save (Ctrl+S)", "Opslaan (Ctrl+S)");
 
     public static string EditorHint => T(
-        "A arrow  ·  P pixelate  ·  N numbers  ·  Ctrl+C copy  ·  Ctrl+S save  ·  Esc close",
-        "A pijl  ·  P pixeleren  ·  N nummers  ·  Ctrl+C kopiëren  ·  Ctrl+S opslaan  ·  Esc sluiten");
+        "A arrow  ·  P pixelate  ·  N numbers  ·  Del delete  ·  Ctrl+C copy  ·  Ctrl+S save  ·  Esc close",
+        "A pijl  ·  P pixeleren  ·  N nummers  ·  Del verwijderen  ·  Ctrl+C kopiëren  ·  Ctrl+S opslaan  ·  Esc sluiten");
 
     public static string Copied => T("Copied to clipboard", "Gekopieerd naar klembord");
     public static string ClipboardBusy => T("Clipboard is busy, please try again", "Klembord is bezet, probeer opnieuw");
