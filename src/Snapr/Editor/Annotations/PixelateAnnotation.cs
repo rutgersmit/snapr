@@ -10,6 +10,7 @@ public sealed class PixelateAnnotation : IAnnotation
 {
     private readonly BitmapSource _source;
     private readonly int _blockSize;
+    private readonly int _seed = Random.Shared.Next(); // fresh noise pattern per region
     private readonly Point _start;
     private Int32Rect _region = Int32Rect.Empty;
     private BitmapSource? _pixelated;
@@ -34,7 +35,7 @@ public sealed class PixelateAnnotation : IAnnotation
         if (region == _region) return;
 
         _region = region;
-        _pixelated = IsEmpty ? null : Pixelator.Pixelate(_source, _region, _blockSize);
+        _pixelated = IsEmpty ? null : Pixelator.Pixelate(_source, _region, _blockSize, _seed);
     }
 
     public void Render(DrawingContext dc)

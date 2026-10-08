@@ -32,6 +32,10 @@ public static class Strings
         $"{hotkey} is already in use by another program. Choose a different shortcut.",
         $"{hotkey} is al in gebruik door een ander programma. Kies een andere sneltoets.");
 
+    public static string UnexpectedError(string message, string logPath) => T(
+        $"Something went wrong, but Snapr keeps running.\n\n{message}\n\nDetails were written to:\n{logPath}",
+        $"Er ging iets mis, maar Snapr blijft draaien.\n\n{message}\n\nDetails staan in:\n{logPath}");
+
     public static string StartupFailed => T("Could not set 'Start with Windows'.", "Kon 'start met Windows' niet instellen.");
 
     // ---- Capture overlay -----------------------------------------------------------------
@@ -58,8 +62,8 @@ public static class Strings
     public static string Save => T("Save (Ctrl+S)", "Opslaan (Ctrl+S)");
 
     public static string EditorHint => T(
-        "A arrow  ·  P pixelate  ·  N numbers  ·  Ctrl+C copy  ·  Ctrl+S save  ·  Esc close",
-        "A pijl  ·  P pixeleren  ·  N nummers  ·  Ctrl+C kopiëren  ·  Ctrl+S opslaan  ·  Esc sluiten");
+        "A arrow  ·  P pixelate  ·  N numbers  ·  Del delete  ·  Ctrl+C copy  ·  Ctrl+S save  ·  Esc close",
+        "A pijl  ·  P pixeleren  ·  N nummers  ·  Del verwijderen  ·  Ctrl+C kopiëren  ·  Ctrl+S opslaan  ·  Esc sluiten");
 
     public static string Copied => T("Copied to clipboard", "Gekopieerd naar klembord");
     public static string ClipboardBusy => T("Clipboard is busy, please try again", "Klembord is bezet, probeer opnieuw");

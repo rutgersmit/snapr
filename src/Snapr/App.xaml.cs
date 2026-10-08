@@ -1,16 +1,15 @@
 using System;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
 using Snapr.Capture;
 using Snapr.Editor;
-using Snapr.Interop;
 using Snapr.Localization;
 using Snapr.Services;
 using Snapr.Settings;
 using Forms = System.Windows.Forms;
-using Point = System.Drawing.Point;
 
 namespace Snapr;
 
@@ -22,6 +21,7 @@ public partial class App : Application
     private Icon? _trayIcon;
     private CaptureOverlayWindow? _overlay;
     private SettingsWindow? _settingsWindow;
+    private bool _showingError;
 
     public AppSettings Settings { get; private set; } = new();
 
@@ -30,6 +30,7 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        HookUnhandledExceptions();
 
         _singleInstance = new Mutex(true, @"Local\Snapr.SingleInstance", out bool isFirst);
         if (!isFirst)
@@ -55,7 +56,7 @@ public partial class App : Application
             _tray.Visible = false;
             _tray.Dispose();
         }
-        if (_trayIcon is not null) NativeMethods.DestroyIcon(_trayIcon.Handle);
+        _trayIcon?.Dispose();
         _singleInstance?.Dispose();
         base.OnExit(e);
     }
@@ -86,11 +87,11 @@ public partial class App : Application
         if (_overlay is not null) return;
 
         var shot = ScreenCapture.CaptureVirtualScreen();
-        _overlay = new CaptureOverlayWindow(shot);
-        _overlay.Closed += (_, _) =>
+        var overlay = new CaptureOverlayWindow(shot);
+        overlay.Closed += (_, _) =>
         {
-            var result = _overlay.Result;
             _overlay = null;
+            var result = overlay.Result;
             if (result is null) return;
 
             if (Settings.CopyOnCapture)
@@ -100,8 +101,18 @@ public partial class App : Application
             editor.Show();
             editor.Activate();
         };
-        _overlay.Show();
-        _overlay.Activate();
+
+        _overlay = overlay;
+        try
+        {
+            overlay.Show();
+            overlay.Activate();
+        }
+        catch
+        {
+            _overlay = null; // otherwise every later capture would be ignored
+            throw;
+        }
     }
 
     public void ShowSettings()
@@ -132,6 +143,52 @@ public partial class App : Application
         }
     }
 
+    // ---- Error handling ------------------------------------------------------------------
+
+    /// <summary>
+    /// A tray app that dies silently also takes the hotkey with it, so log every unexpected
+    /// error, tell the user once, and keep running wherever .NET allows it.
+    /// </summary>
+    private void HookUnhandledExceptions()
+    {
+        DispatcherUnhandledException += (_, e) =>
+        {
+            ReportError(e.Exception, "UI");
+            e.Handled = true;
+        };
+        // Tray menu clicks run through WinForms, which has its own handler.
+        Forms.Application.ThreadException += (_, e) => ReportError(e.Exception, "Tray");
+        TaskScheduler.UnobservedTaskException += (_, e) =>
+        {
+            ErrorLog.Write(e.Exception, "Task");
+            e.SetObserved();
+        };
+        // Not recoverable, but at least leave a trace.
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+        {
+            if (e.ExceptionObject is Exception ex) ErrorLog.Write(ex, "Fatal");
+        };
+    }
+
+    private void ReportError(Exception exception, string source)
+    {
+        ErrorLog.Write(exception, source);
+        if (_showingError) return; // one dialog at a time, even if errors repeat
+
+        _showingError = true;
+        try
+        {
+            MessageBox.Show(Strings.UnexpectedError(exception.Message, ErrorLog.FilePath), "Snapr",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+        finally
+        {
+            _showingError = false;
+        }
+    }
+
+    // ---- Tray ----------------------------------------------------------------------------
+
     private void CreateTrayIcon()
     {
         _trayIcon = CreateAppIcon();
@@ -158,31 +215,11 @@ public partial class App : Application
     private void ShowBalloon(string title, string text, Forms.ToolTipIcon icon = Forms.ToolTipIcon.Info)
         => _tray?.ShowBalloonTip(4000, title, text, icon);
 
-    /// <summary>Draws the tray icon: a blue rounded square with white viewfinder corners.</summary>
+    /// <summary>Loads the app icon (Assets/snapr.ico) at the tray's DPI-aware small icon size.</summary>
     private static Icon CreateAppIcon()
     {
-        const int size = 32;
-        using var bitmap = new Bitmap(size, size);
-        using (var g = Graphics.FromImage(bitmap))
-        {
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-            using var background = new GraphicsPath();
-            const int r = 8;
-            background.AddArc(1, 1, r * 2, r * 2, 180, 90);
-            background.AddArc(size - 1 - r * 2, 1, r * 2, r * 2, 270, 90);
-            background.AddArc(size - 1 - r * 2, size - 1 - r * 2, r * 2, r * 2, 0, 90);
-            background.AddArc(1, size - 1 - r * 2, r * 2, r * 2, 90, 90);
-            background.CloseFigure();
-            using var fill = new SolidBrush(Color.FromArgb(10, 132, 255));
-            g.FillPath(fill, background);
-
-            using var pen = new Pen(Color.White, 3) { StartCap = LineCap.Round, EndCap = LineCap.Round };
-            const int a = 8, b = 24, l = 6;
-            g.DrawLines(pen, new[] { new Point(a, a + l), new Point(a, a), new Point(a + l, a) });
-            g.DrawLines(pen, new[] { new Point(b - l, a), new Point(b, a), new Point(b, a + l) });
-            g.DrawLines(pen, new[] { new Point(b, b - l), new Point(b, b), new Point(b - l, b) });
-            g.DrawLines(pen, new[] { new Point(a + l, b), new Point(a, b), new Point(a, b - l) });
-        }
-        return Icon.FromHandle(bitmap.GetHicon());
+        var resource = GetResourceStream(new Uri("pack://application:,,,/Assets/snapr.ico"))!;
+        using var stream = resource.Stream;
+        return new Icon(stream, Forms.SystemInformation.SmallIconSize);
     }
 }

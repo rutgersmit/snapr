@@ -1,11 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Media;
 
 namespace Snapr.Editor.Annotations;
 
 /// <summary>A slightly tapered arrow with a broad, rounded head, white outline and soft shadow.</summary>
-public sealed class ArrowAnnotation : IAnnotation
+public sealed class ArrowAnnotation : IEditableAnnotation
 {
     private static readonly Brush ShadowBrush = Freeze(new SolidColorBrush(Color.FromArgb(70, 0, 0, 0)));
 
@@ -13,7 +14,7 @@ public sealed class ArrowAnnotation : IAnnotation
     private readonly Pen _outline;
     private readonly double _thickness;
 
-    public Point Start { get; }
+    public Point Start { get; set; }
     public Point End { get; set; }
 
     public ArrowAnnotation(Point start, Color color, double thickness)
@@ -26,6 +27,34 @@ public sealed class ArrowAnnotation : IAnnotation
     }
 
     public bool IsTooShort => (End - Start).Length < _thickness * 2;
+
+    public IReadOnlyList<Point> Handles
+    {
+        get => new[] { Start, End };
+        set => (Start, End) = (value[0], value[1]);
+    }
+
+    public bool HitTest(Point p, double tolerance)
+        => DistanceToSegment(p, Start, End) <= Math.Max(_thickness * 1.2, _thickness / 2 + tolerance);
+
+    public Rect Bounds
+    {
+        get
+        {
+            var rect = new Rect(Start, End);
+            rect.Inflate(_thickness * 2.3, _thickness * 2.3); // covers the head's wings
+            return rect;
+        }
+    }
+
+    private static double DistanceToSegment(Point p, Point a, Point b)
+    {
+        var ab = b - a;
+        double lengthSquared = ab.LengthSquared;
+        if (lengthSquared == 0) return (p - a).Length;
+        double t = Math.Clamp(Vector.Multiply(p - a, ab) / lengthSquared, 0, 1);
+        return (p - (a + t * ab)).Length;
+    }
 
     public void Render(DrawingContext dc)
     {

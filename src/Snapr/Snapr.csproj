@@ -8,6 +8,7 @@
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\snapr.ico</ApplicationIcon>
     <AssemblyName>Snapr</AssemblyName>
     <RootNamespace>Snapr</RootNamespace>
     <Version>0.1.0</Version>
@@ -16,5 +17,10 @@
     <!-- DPI awareness lives in app.manifest because WPF, not WinForms, hosts the app. -->
     <NoWarn>$(NoWarn);WFO0003</NoWarn>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Also embedded as a WPF resource so the tray icon can load it. -->
+    <Resource Include="Assets\snapr.ico" />
+  </ItemGroup>
 
 </Project>

@@ -61,9 +61,6 @@ internal static class NativeMethods
     [DllImport("user32.dll")]
     public static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
 
-    [DllImport("user32.dll")]
-    public static extern bool DestroyIcon(IntPtr hIcon);
-
     [DllImport("dwmapi.dll")]
     public static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
 
