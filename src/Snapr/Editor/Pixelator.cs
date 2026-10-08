@@ -16,7 +16,8 @@ public static class Pixelator
     /// </summary>
     /// <remarks>
     /// Plain block averages of text can be partly reversed by matching them against rendered
-    /// candidate text (e.g. the Depix tool). The per-block noise breaks that match. Blocks sit on
+    /// candidate text (e.g. the Depix tool). The per-block noise makes that matching much harder,
+    /// though it is risk reduction rather than a guarantee. Blocks sit on
     /// a fixed grid over the whole image and the noise depends only on <paramref name="seed"/> and
     /// the block's grid position, so the pattern stays stable while a region is being dragged.
     /// </remarks>
@@ -25,36 +26,46 @@ public static class Pixelator
         if (source.Format != PixelFormats.Bgr32 && source.Format != PixelFormats.Bgra32)
             source = new FormatConvertedBitmap(source, PixelFormats.Bgr32, null, 0);
 
+        // Averages come from whole grid blocks (clipped to the image), not just the part inside the
+        // region, so an edge block keeps its colour while the region's edge moves through it.
+        int left = region.X - region.X % blockSize;
+        int top = region.Y - region.Y % blockSize;
+        int right = Math.Min(source.PixelWidth, CeilToBlock(region.X + region.Width, blockSize));
+        int bottom = Math.Min(source.PixelHeight, CeilToBlock(region.Y + region.Height, blockSize));
+
+        int srcWidth = right - left, srcHeight = bottom - top, srcStride = srcWidth * 4;
+        var src = new byte[srcStride * srcHeight];
+        source.CopyPixels(new Int32Rect(left, top, srcWidth, srcHeight), src, srcStride, 0);
+
         int width = region.Width, height = region.Height, stride = width * 4;
         var pixels = new byte[stride * height];
-        source.CopyPixels(region, pixels, stride, 0);
 
-        // Grid lines in region coordinates, aligned to multiples of blockSize in the image.
-        int firstX = -(region.X % blockSize), firstY = -(region.Y % blockSize);
-
-        for (int gy = firstY; gy < height; gy += blockSize)
+        for (int by = 0; by < srcHeight; by += blockSize)
         {
-            int y0 = Math.Max(0, gy), y1 = Math.Min(height, gy + blockSize);
-            for (int gx = firstX; gx < width; gx += blockSize)
+            int bh = Math.Min(blockSize, srcHeight - by);
+            for (int bx = 0; bx < srcWidth; bx += blockSize)
             {
-                int x0 = Math.Max(0, gx), x1 = Math.Min(width, gx + blockSize);
+                int bw = Math.Min(blockSize, srcWidth - bx);
 
                 long b = 0, g = 0, r = 0;
-                for (int y = y0; y < y1; y++)
+                for (int y = by; y < by + bh; y++)
                 {
-                    int i = y * stride + x0 * 4;
-                    for (int x = x0; x < x1; x++, i += 4)
+                    int i = y * srcStride + bx * 4;
+                    for (int x = 0; x < bw; x++, i += 4)
                     {
-                        b += pixels[i];
-                        g += pixels[i + 1];
-                        r += pixels[i + 2];
+                        b += src[i];
+                        g += src[i + 1];
+                        r += src[i + 2];
                     }
                 }
 
-                int count = (x1 - x0) * (y1 - y0);
-                int noise = Noise(seed, (region.X + gx) / blockSize, (region.Y + gy) / blockSize);
+                int count = bw * bh;
+                int noise = Noise(seed, (left + bx) / blockSize, (top + by) / blockSize);
                 byte ab = Channel(b / count + noise), ag = Channel(g / count + noise), ar = Channel(r / count + noise);
 
+                // Paint only the part of this block that lies inside the region.
+                int x0 = Math.Max(0, left + bx - region.X), x1 = Math.Min(width, left + bx + bw - region.X);
+                int y0 = Math.Max(0, top + by - region.Y), y1 = Math.Min(height, top + by + bh - region.Y);
                 for (int y = y0; y < y1; y++)
                 {
                     int i = y * stride + x0 * 4;
@@ -88,6 +99,8 @@ public static class Pixelator
             return (int)(h % (2 * NoiseAmplitude + 1)) - NoiseAmplitude;
         }
     }
+
+    private static int CeilToBlock(int value, int blockSize) => (value + blockSize - 1) / blockSize * blockSize;
 
     private static byte Channel(long value) => (byte)Math.Clamp(value, 0, 255);
 }

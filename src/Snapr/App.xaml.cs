@@ -87,19 +87,11 @@ public partial class App : Application
         if (_overlay is not null) return;
 
         var shot = ScreenCapture.CaptureVirtualScreen();
-        try
+        var overlay = new CaptureOverlayWindow(shot);
+        overlay.Closed += (_, _) =>
         {
-            _overlay = new CaptureOverlayWindow(shot);
-        }
-        catch
-        {
-            _overlay = null; // otherwise every later capture would be ignored
-            throw;
-        }
-        _overlay.Closed += (_, _) =>
-        {
-            var result = _overlay.Result;
             _overlay = null;
+            var result = overlay.Result;
             if (result is null) return;
 
             if (Settings.CopyOnCapture)
@@ -109,8 +101,18 @@ public partial class App : Application
             editor.Show();
             editor.Activate();
         };
-        _overlay.Show();
-        _overlay.Activate();
+
+        _overlay = overlay;
+        try
+        {
+            overlay.Show();
+            overlay.Activate();
+        }
+        catch
+        {
+            _overlay = null; // otherwise every later capture would be ignored
+            throw;
+        }
     }
 
     public void ShowSettings()

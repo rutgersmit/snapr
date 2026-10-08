@@ -7,7 +7,7 @@ Een kleine screenshot-tool voor Windows, geïnspireerd op [Shottr](https://shott
 - **Sneltoets**: standaard `PrintScreen`, instelbaar via het tray-icoon › *Instellingen…*
 - **Gebied kiezen**: sleep een rechthoek, klik voor het hele scherm onder de muis, `Enter` voor alle schermen, `Esc` om te annuleren.
 - **Pijlen** (`A`) in vijf kleuren (`1`–`5`).
-- **Pixeleren** (`P`): sleep over tekst om die onleesbaar te maken. Elk blok krijgt een beetje willekeurige ruis, zodat de tekst ook niet met tools als Depix terug te rekenen is.
+- **Pixeleren** (`P`): sleep over tekst om die onleesbaar te maken. Elk blok krijgt een beetje willekeurige ruis; dat maakt terugrekenen met tools als Depix veel lastiger, maar is geen garantie. Voor echt gevoelige gegevens (wachtwoorden, sleutels) kun je die beter helemaal buiten beeld houden.
 - **Nummers** (`N`): elke klik plaatst het volgende nummer (1, 2, 3, …) in een gekleurd afgerond vierkantje; slepen om de plek te verfijnen.
 - **Verplaatsen**: klik op een pijl of nummer om hem te selecteren en sleep hem naar een andere plek. Sleep een uiteinde van een geselecteerde pijl om richting en lengte aan te passen. `Delete` verwijdert de selectie, `Esc` deselecteert.
 - Ongedaan maken / opnieuw (`Ctrl+Z` / `Ctrl+Y`), kopiëren (`Ctrl+C`), opslaan als PNG (`Ctrl+S`), sluiten (`Esc`).
