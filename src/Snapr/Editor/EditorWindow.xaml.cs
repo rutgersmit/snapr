@@ -261,7 +261,7 @@ public partial class EditorWindow : Window
     protected override void OnClosing(CancelEventArgs e)
     {
         // Leave the edited version on the clipboard, like Shottr does.
-        if (_changedSinceCopy && _annotations.Any() && App.Current.Settings.CopyOnCapture)
+        if (_changedSinceCopy && App.Current.Settings.CopyOnCapture)
             ClipboardHelper.TrySetImage(Flatten());
         base.OnClosing(e);
     }
