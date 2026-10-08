@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AssemblyName>Snapr</AssemblyName>
+    <RootNamespace>Snapr</RootNamespace>
+    <Version>0.1.0</Version>
+    <Product>Snapr</Product>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <!-- DPI awareness lives in app.manifest because WPF, not WinForms, hosts the app. -->
+    <NoWarn>$(NoWarn);WFO0003</NoWarn>
+  </PropertyGroup>
+
+</Project>
