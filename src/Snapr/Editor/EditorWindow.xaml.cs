@@ -47,6 +47,7 @@ public partial class EditorWindow : Window
             // Size the content before the first layout so CenterScreen centres the final size.
             ApplyDpi(VisualTreeHelper.GetDpi(this));
         };
+        LocationChanged += (_, _) => UpdateWorkAreaLimits();
         PreviewKeyDown += OnKeyDown;
         UpdateButtons();
     }
@@ -63,9 +64,23 @@ public partial class EditorWindow : Window
         _dpiScale = dpi.DpiScaleX;
         DpiScale.ScaleX = DpiScale.ScaleY = 1 / _dpiScale;
 
-        var workArea = SystemParameters.WorkArea;
-        MaxWidth = workArea.Width * 0.92;
-        MaxHeight = workArea.Height * 0.92;
+        UpdateWorkAreaLimits();
+    }
+
+    /// <summary>Limits the window to the work area of the monitor it is currently on.</summary>
+    private void UpdateWorkAreaLimits()
+    {
+        var hwnd = new WindowInteropHelper(this).Handle;
+        if (hwnd == IntPtr.Zero) return;
+
+        var info = new NativeMethods.MONITORINFO { cbSize = System.Runtime.InteropServices.Marshal.SizeOf<NativeMethods.MONITORINFO>() };
+        var monitor = NativeMethods.MonitorFromWindow(hwnd, NativeMethods.MONITOR_DEFAULTTONEAREST);
+        if (monitor == IntPtr.Zero || !NativeMethods.GetMonitorInfo(monitor, ref info)) return;
+
+        double width = (info.rcWork.Right - info.rcWork.Left) / _dpiScale;
+        double height = (info.rcWork.Bottom - info.rcWork.Top) / _dpiScale;
+        MaxWidth = width * 0.92;
+        MaxHeight = height * 0.92;
     }
 
     // ---- Drawing -------------------------------------------------------------------------
