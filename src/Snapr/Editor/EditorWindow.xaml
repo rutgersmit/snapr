@@ -24,6 +24,15 @@
                               Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ButtonBase}}"
                               Data="M3,3 H9 V9 H3 Z M15,3 H21 V9 H15 Z M9,9 H15 V15 H9 Z M3,15 H9 V21 H3 Z M15,15 H21 V21 H15 Z" />
                     </ToggleButton>
+                    <ToggleButton x:Name="NumberTool" Style="{StaticResource ToolButton}" ToolTip="Nummers (N)"
+                                  Click="OnToolClicked">
+                        <Grid Width="20" Height="20">
+                            <Rectangle RadiusX="5" RadiusY="5" StrokeThickness="2"
+                                       Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ButtonBase}}" />
+                            <TextBlock Text="1" FontSize="12" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ButtonBase}}" />
+                        </Grid>
+                    </ToggleButton>
 
                     <Rectangle Style="{StaticResource ToolbarSeparator}" />
 
@@ -61,7 +70,7 @@
             <DockPanel>
                 <TextBlock x:Name="SizeText" DockPanel.Dock="Left" Foreground="{StaticResource SubtleForeground}" FontSize="12" />
                 <TextBlock x:Name="StatusText" HorizontalAlignment="Right" Foreground="{StaticResource SubtleForeground}" FontSize="12"
-                           Text="A pijl  ·  P pixeleren  ·  Ctrl+C kopiëren  ·  Ctrl+S opslaan  ·  Esc sluiten" />
+                           Text="A pijl  ·  P pixeleren  ·  N nummers  ·  Ctrl+C kopiëren  ·  Ctrl+S opslaan  ·  Esc sluiten" />
             </DockPanel>
         </Border>
 
