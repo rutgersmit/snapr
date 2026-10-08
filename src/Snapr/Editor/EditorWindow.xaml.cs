@@ -18,7 +18,7 @@ namespace Snapr.Editor;
 
 public partial class EditorWindow : Window
 {
-    private enum Tool { Arrow, Pixelate }
+    private enum Tool { Arrow, Pixelate, Number }
 
     private readonly BitmapSource _image;
     private readonly List<IAnnotation> _annotations = new();
@@ -91,6 +91,7 @@ public partial class EditorWindow : Window
         _pending = _tool switch
         {
             Tool.Arrow => new ArrowAnnotation(p, _color, Math.Round(5 * _dpiScale)),
+            Tool.Number => new NumberAnnotation(p, NextNumber, _color, Math.Round(26 * _dpiScale)),
             _ => new PixelateAnnotation(_image, p, PixelBlockSize),
         };
         Layer.Pending = _pending;
@@ -107,6 +108,7 @@ public partial class EditorWindow : Window
         {
             case ArrowAnnotation arrow: arrow.End = p; break;
             case PixelateAnnotation pixelate: pixelate.Update(p); break;
+            case NumberAnnotation number: number.Center = p; break; // drag to fine-tune the position
         }
         Layer.InvalidateVisual();
     }
@@ -136,6 +138,9 @@ public partial class EditorWindow : Window
         UpdateButtons();
     }
 
+    /// <summary>Each click counts up; undoing a marker gives its number back.</summary>
+    private int NextNumber => _annotations.OfType<NumberAnnotation>().Select(n => n.Number).DefaultIfEmpty(0).Max() + 1;
+
     /// <summary>Blocks large enough that text inside cannot be read, scaled with display DPI.</summary>
     private int PixelBlockSize => (int)Math.Max(10, Math.Round(12 * _dpiScale));
 
@@ -146,21 +151,22 @@ public partial class EditorWindow : Window
     // ---- Toolbar -------------------------------------------------------------------------
 
     private void OnToolClicked(object sender, RoutedEventArgs e)
-        => SelectTool(sender == PixelateTool ? Tool.Pixelate : Tool.Arrow);
+        => SelectTool(sender == PixelateTool ? Tool.Pixelate : sender == NumberTool ? Tool.Number : Tool.Arrow);
 
     private void SelectTool(Tool tool)
     {
         _tool = tool;
         ArrowTool.IsChecked = tool == Tool.Arrow;
         PixelateTool.IsChecked = tool == Tool.Pixelate;
+        NumberTool.IsChecked = tool == Tool.Number;
     }
 
     private void OnColorChecked(object sender, RoutedEventArgs e)
     {
         if (sender is RadioButton { Background: SolidColorBrush brush })
             _color = brush.Color;
-        // Picking a colour implies drawing an arrow, the only coloured tool.
-        if (ArrowTool is not null) SelectTool(Tool.Arrow);
+        // Pixelate has no colour, so picking one switches back to the arrow.
+        if (_tool == Tool.Pixelate) SelectTool(Tool.Arrow);
     }
 
     private void SelectColor(int index)
@@ -267,6 +273,7 @@ public partial class EditorWindow : Window
             case Key.S when ctrl: Save(); break;
             case Key.A when !ctrl: SelectTool(Tool.Arrow); break;
             case Key.P or Key.B when !ctrl: SelectTool(Tool.Pixelate); break;
+            case Key.N when !ctrl: SelectTool(Tool.Number); break;
             case >= Key.D1 and <= Key.D5 when !ctrl: SelectColor(e.Key - Key.D1); break;
             default: return;
         }

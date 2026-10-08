@@ -8,6 +8,7 @@ Een kleine screenshot-tool voor Windows, geïnspireerd op [Shottr](https://shott
 - **Gebied kiezen**: sleep een rechthoek, klik voor het hele scherm onder de muis, `Enter` voor alle schermen, `Esc` om te annuleren.
 - **Pijlen** (`A`) in vijf kleuren (`1`–`5`).
 - **Pixeleren** (`P`): sleep over tekst om die onleesbaar te maken.
+- **Nummers** (`N`): elke klik plaatst het volgende nummer (1, 2, 3, …) in een gekleurd afgerond vierkantje; slepen om de plek te verfijnen.
 - Ongedaan maken / opnieuw (`Ctrl+Z` / `Ctrl+Y`), kopiëren (`Ctrl+C`), opslaan als PNG (`Ctrl+S`), sluiten (`Esc`).
 - De screenshot staat direct op het klembord; sluit je de editor na bewerken, dan staat de bewerkte versie op het klembord.
 - Optioneel automatisch starten met Windows.
