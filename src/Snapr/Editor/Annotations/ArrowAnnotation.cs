@@ -47,10 +47,10 @@ public sealed class ArrowAnnotation : IAnnotation
         var normal = new Vector(-dir.Y, dir.X);
 
         double t = _thickness;
-        double headLength = Math.Min(t * 3.4, length * 0.6);
-        double headHalfWidth = Math.Max(t * 2.5, headLength * 0.6);
-        double shaftHalfWidth = t * 0.65;
-        double tailHalfWidth = t * 0.4;
+        double headLength = Math.Min(t * 3.2, length * 0.6);
+        double headHalfWidth = Math.Max(t * 2.3, headLength * 0.6);
+        double shaftHalfWidth = t * 0.75;
+        double tailHalfWidth = t * 0.55;
         var headBase = End - dir * headLength;
 
         // Outline from tail round to the tip and back, each corner with its own rounding radius.
