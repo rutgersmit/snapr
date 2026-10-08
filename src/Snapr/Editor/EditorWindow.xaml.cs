@@ -91,7 +91,7 @@ public partial class EditorWindow : Window
         var p = e.GetPosition(Surface);
         _pending = _tool switch
         {
-            Tool.Arrow => new ArrowAnnotation(p, _color, Math.Round(5 * _dpiScale)),
+            Tool.Arrow => new ArrowAnnotation(p, _color, Math.Round(6 * _dpiScale)),
             Tool.Number => new NumberAnnotation(p, NextNumber, _color, Math.Round(26 * _dpiScale)),
             _ => new PixelateAnnotation(_image, p, PixelBlockSize),
         };

@@ -4,7 +4,7 @@ using System.Windows.Media;
 
 namespace Snapr.Editor.Annotations;
 
-/// <summary>A tapered arrow with a filled head, white outline and soft shadow.</summary>
+/// <summary>A slightly tapered arrow with a broad, rounded head, white outline and soft shadow.</summary>
 public sealed class ArrowAnnotation : IAnnotation
 {
     private static readonly Brush ShadowBrush = Freeze(new SolidColorBrush(Color.FromArgb(70, 0, 0, 0)));
@@ -47,28 +47,50 @@ public sealed class ArrowAnnotation : IAnnotation
         var normal = new Vector(-dir.Y, dir.X);
 
         double t = _thickness;
-        double headLength = Math.Min(t * 3.6, length * 0.6);
-        double headHalfWidth = Math.Max(t * 1.7, headLength * 0.5);
-        double tailHalfWidth = t * 0.2;
+        double headLength = Math.Min(t * 3.4, length * 0.6);
+        double headHalfWidth = Math.Max(t * 2.5, headLength * 0.6);
+        double shaftHalfWidth = t * 0.65;
+        double tailHalfWidth = t * 0.4;
         var headBase = End - dir * headLength;
+
+        // Outline from tail round to the tip and back, each corner with its own rounding radius.
+        var corners = new (Point Point, double Radius)[]
+        {
+            (Start - normal * tailHalfWidth, tailHalfWidth),
+            (headBase - normal * shaftHalfWidth, t * 0.3),
+            (headBase - normal * headHalfWidth, t * 0.8),
+            (End, t * 0.7),
+            (headBase + normal * headHalfWidth, t * 0.8),
+            (headBase + normal * shaftHalfWidth, t * 0.3),
+            (Start + normal * tailHalfWidth, tailHalfWidth),
+        };
 
         var geometry = new StreamGeometry();
         using (var ctx = geometry.Open())
         {
-            ctx.BeginFigure(Start + normal * tailHalfWidth, isFilled: true, isClosed: true);
-            ctx.PolyLineTo(new[]
+            for (int i = 0; i < corners.Length; i++)
             {
-                headBase + normal * (t / 2),
-                headBase + normal * headHalfWidth,
-                End,
-                headBase - normal * headHalfWidth,
-                headBase - normal * (t / 2),
-                Start - normal * tailHalfWidth,
-            }, isStroked: true, isSmoothJoin: false);
+                var prev = corners[(i + corners.Length - 1) % corners.Length].Point;
+                var next = corners[(i + 1) % corners.Length].Point;
+                var (corner, radius) = corners[i];
+
+                // Never round more than half of either adjacent edge.
+                var toPrev = prev - corner;
+                var toNext = next - corner;
+                double r = Math.Min(radius, Math.Min(toPrev.Length, toNext.Length) / 2);
+                var entry = corner + Unit(toPrev) * r;
+                var exit = corner + Unit(toNext) * r;
+
+                if (i == 0) ctx.BeginFigure(entry, isFilled: true, isClosed: true);
+                else ctx.LineTo(entry, isStroked: true, isSmoothJoin: true);
+                ctx.QuadraticBezierTo(corner, exit, isStroked: true, isSmoothJoin: true);
+            }
         }
         geometry.Freeze();
         return geometry;
     }
+
+    private static Vector Unit(Vector v) => v.Length > 0 ? v / v.Length : v;
 
     private static T Freeze<T>(T freezable) where T : Freezable
     {
