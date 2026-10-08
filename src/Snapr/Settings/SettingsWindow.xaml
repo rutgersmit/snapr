@@ -1,0 +1,42 @@
+<Window x:Class="Snapr.Settings.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Snapr – Instellingen"
+        Width="460" SizeToContent="Height"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource WindowBackground}"
+        Foreground="{StaticResource ForegroundBrush}"
+        FontFamily="Segoe UI" FontSize="13">
+
+    <StackPanel Margin="20">
+        <TextBlock Text="Sneltoets" FontWeight="SemiBold" Margin="0,0,0,6" />
+        <DockPanel>
+            <Button DockPanel.Dock="Right" Style="{StaticResource DialogButton}" Margin="8,0,0,0"
+                    Content="PrintScreen" Click="OnResetHotkey" />
+            <TextBox x:Name="HotkeyBox" Style="{StaticResource DarkTextBox}" IsReadOnly="True" Cursor="Arrow"
+                     IsReadOnlyCaretVisible="False"
+                     PreviewKeyDown="OnHotkeyKeyDown" PreviewKeyUp="OnHotkeyKeyUp"
+                     GotKeyboardFocus="OnHotkeyFocus" LostKeyboardFocus="OnHotkeyBlur" />
+        </DockPanel>
+        <TextBlock Foreground="{StaticResource SubtleForeground}" FontSize="12" TextWrapping="Wrap" Margin="0,6,0,0"
+                   Text="Klik in het veld en druk de gewenste toetscombinatie. Werkt PrintScreen niet, zet dan in Windows bij Toegankelijkheid › Toetsenbord &quot;Knipprogramma openen met PrtSc&quot; uit." />
+
+        <TextBlock Text="Opslagmap" FontWeight="SemiBold" Margin="0,18,0,6" />
+        <DockPanel>
+            <Button DockPanel.Dock="Right" Style="{StaticResource DialogButton}" Margin="8,0,0,0"
+                    Content="Bladeren…" Click="OnBrowse" />
+            <TextBox x:Name="FolderBox" Style="{StaticResource DarkTextBox}" />
+        </DockPanel>
+
+        <CheckBox x:Name="CopyOnCaptureBox" Margin="0,18,0,0" Foreground="{StaticResource ForegroundBrush}"
+                  Content="Screenshot direct naar het klembord kopiëren" />
+        <CheckBox x:Name="StartupBox" Margin="0,8,0,0" Foreground="{StaticResource ForegroundBrush}"
+                  Content="Starten met Windows" />
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,22,0,0">
+            <Button Style="{StaticResource DialogButton}" Content="Annuleren" IsCancel="True" Click="OnCancel" />
+            <Button Style="{StaticResource PrimaryButton}" Content="Opslaan" Margin="8,0,0,0" IsDefault="True" Click="OnSave" />
+        </StackPanel>
+    </StackPanel>
+</Window>

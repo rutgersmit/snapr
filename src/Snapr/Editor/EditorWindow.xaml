@@ -1,0 +1,86 @@
+<Window x:Class="Snapr.Editor.EditorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:editor="clr-namespace:Snapr.Editor"
+        Title="Snapr"
+        Background="{StaticResource WindowBackground}"
+        SizeToContent="WidthAndHeight"
+        MinWidth="580" MinHeight="260"
+        WindowStartupLocation="CenterScreen"
+        UseLayoutRounding="True">
+
+    <DockPanel>
+        <!-- Toolbar -->
+        <Border DockPanel.Dock="Top" Background="{StaticResource ToolbarBackground}" Padding="10,7">
+            <DockPanel LastChildFill="False">
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
+                    <ToggleButton x:Name="ArrowTool" Style="{StaticResource ToolButton}" ToolTip="Pijl (A)"
+                                  IsChecked="True" Click="OnToolClicked">
+                        <Path Style="{StaticResource Icon}" Data="M5,19 L19,5 M10,5 L19,5 L19,14" />
+                    </ToggleButton>
+                    <ToggleButton x:Name="PixelateTool" Style="{StaticResource ToolButton}" ToolTip="Pixeleren (P)"
+                                  Click="OnToolClicked">
+                        <Path Style="{StaticResource Icon}" StrokeThickness="0"
+                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ButtonBase}}"
+                              Data="M3,3 H9 V9 H3 Z M15,3 H21 V9 H15 Z M9,9 H15 V15 H9 Z M3,15 H9 V21 H3 Z M15,15 H21 V21 H15 Z" />
+                    </ToggleButton>
+
+                    <Rectangle Style="{StaticResource ToolbarSeparator}" />
+
+                    <StackPanel x:Name="Swatches" Orientation="Horizontal">
+                        <RadioButton Style="{StaticResource Swatch}" Background="#FF3B30" IsChecked="True" ToolTip="Rood (1)" Checked="OnColorChecked" />
+                        <RadioButton Style="{StaticResource Swatch}" Background="#FF9F0A" ToolTip="Oranje (2)" Checked="OnColorChecked" />
+                        <RadioButton Style="{StaticResource Swatch}" Background="#FFD60A" ToolTip="Geel (3)" Checked="OnColorChecked" />
+                        <RadioButton Style="{StaticResource Swatch}" Background="#30D158" ToolTip="Groen (4)" Checked="OnColorChecked" />
+                        <RadioButton Style="{StaticResource Swatch}" Background="#0A84FF" ToolTip="Blauw (5)" Checked="OnColorChecked" />
+                    </StackPanel>
+
+                    <Rectangle Style="{StaticResource ToolbarSeparator}" />
+
+                    <Button x:Name="UndoButton" Style="{StaticResource ToolButton}" ToolTip="Ongedaan maken (Ctrl+Z)" Click="OnUndo">
+                        <Path Style="{StaticResource Icon}" Data="M9,5 L4,10 L9,15 M4,10 H15 A5,5 0 0 1 15,20 H11" />
+                    </Button>
+                    <Button x:Name="RedoButton" Style="{StaticResource ToolButton}" ToolTip="Opnieuw (Ctrl+Y)" Click="OnRedo">
+                        <Path Style="{StaticResource Icon}" Data="M15,5 L20,10 L15,15 M20,10 H9 A5,5 0 0 0 9,20 H13" />
+                    </Button>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
+                    <Button Style="{StaticResource ToolButton}" ToolTip="Kopiëren (Ctrl+C)" Click="OnCopy">
+                        <Path Style="{StaticResource Icon}" Data="M9,9 H20 V20 H9 Z M5,15 H4 V4 H15 V5" />
+                    </Button>
+                    <Button Style="{StaticResource ToolButton}" ToolTip="Opslaan (Ctrl+S)" Click="OnSave">
+                        <Path Style="{StaticResource Icon}" Data="M12,4 V15 M7,10 L12,15 L17,10 M4,17 V20 H20 V17" />
+                    </Button>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- Status bar -->
+        <Border DockPanel.Dock="Bottom" Background="{StaticResource ToolbarBackground}" Padding="12,5">
+            <DockPanel>
+                <TextBlock x:Name="SizeText" DockPanel.Dock="Left" Foreground="{StaticResource SubtleForeground}" FontSize="12" />
+                <TextBlock x:Name="StatusText" HorizontalAlignment="Right" Foreground="{StaticResource SubtleForeground}" FontSize="12"
+                           Text="A pijl  ·  P pixeleren  ·  Ctrl+C kopiëren  ·  Ctrl+S opslaan  ·  Esc sluiten" />
+            </DockPanel>
+        </Border>
+
+        <!-- Canvas -->
+        <Border Padding="16">
+            <Viewbox Stretch="Uniform" StretchDirection="DownOnly">
+                <Border BorderBrush="#3A3A3C" BorderThickness="1">
+                    <Grid x:Name="Surface" Cursor="Cross" Background="Transparent"
+                          MouseLeftButtonDown="OnSurfaceMouseDown"
+                          MouseMove="OnSurfaceMouseMove"
+                          MouseLeftButtonUp="OnSurfaceMouseUp">
+                        <Grid.LayoutTransform>
+                            <ScaleTransform x:Name="DpiScale" />
+                        </Grid.LayoutTransform>
+                        <Image x:Name="BaseImage" Stretch="Fill" RenderOptions.BitmapScalingMode="HighQuality" />
+                        <editor:AnnotationLayer x:Name="Layer" />
+                    </Grid>
+                </Border>
+            </Viewbox>
+        </Border>
+    </DockPanel>
+</Window>
