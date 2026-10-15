@@ -5,7 +5,8 @@ namespace Snapr.Editor.Annotations;
 
 /// <summary>
 /// An annotation that can be selected and moved after it was placed. Its shape is fully described
-/// by a few handle points (both ends of an arrow, the centre of a number), which makes moving,
+/// by a few handle points (both ends of an arrow, the centre line of a highlight, the centre of a
+/// number), which makes moving,
 /// reshaping and undoing those changes uniform.
 /// </summary>
 public interface IEditableAnnotation : IAnnotation
