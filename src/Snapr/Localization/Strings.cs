@@ -47,6 +47,7 @@ public static class Strings
     // ---- Editor --------------------------------------------------------------------------
 
     public static string ToolArrow => T("Arrow (A)", "Pijl (A)");
+    public static string ToolHighlight => T("Highlight (H)", "Markeren (H)");
     public static string ToolPixelate => T("Pixelate (P)", "Pixeleren (P)");
     public static string ToolNumber => T("Numbers (N)", "Nummers (N)");
 
@@ -62,8 +63,8 @@ public static class Strings
     public static string Save => T("Save (Ctrl+S)", "Opslaan (Ctrl+S)");
 
     public static string EditorHint => T(
-        "A arrow  ·  P pixelate  ·  N numbers  ·  Del delete  ·  Ctrl+C copy  ·  Ctrl+S save  ·  Esc close",
-        "A pijl  ·  P pixeleren  ·  N nummers  ·  Del verwijderen  ·  Ctrl+C kopiëren  ·  Ctrl+S opslaan  ·  Esc sluiten");
+        "A arrow  ·  H highlight  ·  P pixelate  ·  N numbers  ·  Del delete  ·  Ctrl+C copy  ·  Ctrl+S save  ·  Esc close",
+        "A pijl  ·  H markeren  ·  P pixeleren  ·  N nummers  ·  Del verwijderen  ·  Ctrl+C kopiëren  ·  Ctrl+S opslaan  ·  Esc sluiten");
 
     public static string Copied => T("Copied to clipboard", "Gekopieerd naar klembord");
     public static string ClipboardBusy => T("Clipboard is busy, please try again", "Klembord is bezet, probeer opnieuw");

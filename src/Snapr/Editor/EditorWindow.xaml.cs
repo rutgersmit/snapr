@@ -19,7 +19,7 @@ namespace Snapr.Editor;
 
 public partial class EditorWindow : Window
 {
-    private enum Tool { Arrow, Pixelate, Number }
+    private enum Tool { Arrow, Highlight, Pixelate, Number }
 
     private enum Drag { None, Create, Move, Handle }
 
@@ -29,6 +29,7 @@ public partial class EditorWindow : Window
 
     private Tool _tool = Tool.Arrow;
     private Color _color = Color.FromRgb(0xFF, 0x3B, 0x30);
+    private Color _highlightColor = Color.FromRgb(0xFF, 0xD6, 0x0A); // the highlighter keeps its own colour, yellow at first
     private double _dpiScale = 1;
     private IAnnotation? _pending;
     private bool _changedSinceCopy;
@@ -106,7 +107,7 @@ public partial class EditorWindow : Window
         }
         else if (AnnotationAt(p) is { } hit)
         {
-            // Clicking an existing arrow or number selects it and starts moving it, whatever the tool.
+            // Clicking an existing arrow, highlight or number selects it and starts moving it, whatever the tool.
             Select(hit);
             BeginEdit(Drag.Move, p, -1);
         }
@@ -116,6 +117,8 @@ public partial class EditorWindow : Window
             _pending = _tool switch
             {
                 Tool.Arrow => new ArrowAnnotation(p, _color, Math.Round(7 * _dpiScale)),
+                // About the height of a line of text.
+                Tool.Highlight => new HighlightAnnotation(_image, p, _highlightColor, Math.Round(18 * _dpiScale)),
                 Tool.Number => new NumberAnnotation(p, NextNumber, _color, Math.Round(26 * _dpiScale)),
                 _ => new PixelateAnnotation(_image, p, PixelBlockSize),
             };
@@ -160,6 +163,7 @@ public partial class EditorWindow : Window
                 switch (_pending)
                 {
                     case ArrowAnnotation arrow: arrow.End = p; break;
+                    case HighlightAnnotation highlight: highlight.Extend(p); break;
                     case PixelateAnnotation pixelate: pixelate.Update(p); break;
                     case NumberAnnotation number: number.Center = p; break; // drag to fine-tune the position
                 }
@@ -192,10 +196,12 @@ public partial class EditorWindow : Window
         {
             _pending = null;
             Layer.Pending = null;
+            (finished as HighlightAnnotation)?.Finish();
 
             bool empty = finished switch
             {
                 ArrowAnnotation arrow => arrow.IsTooShort,
+                HighlightAnnotation highlight => highlight.IsTooShort,
                 PixelateAnnotation pixelate => pixelate.IsEmpty,
                 _ => false,
             };
@@ -214,7 +220,7 @@ public partial class EditorWindow : Window
 
     private double HitTolerance => 4 * _dpiScale;
 
-    /// <summary>The topmost arrow or number under <paramref name="p"/>.</summary>
+    /// <summary>The topmost arrow, highlight or number under <paramref name="p"/>.</summary>
     private IEditableAnnotation? AnnotationAt(Point p)
     {
         for (int i = _annotations.Count - 1; i >= 0; i--)
@@ -225,11 +231,11 @@ public partial class EditorWindow : Window
         return null;
     }
 
-    /// <summary>Index of the arrow end point under <paramref name="p"/>, if any.</summary>
+    /// <summary>Index of the end point under <paramref name="p"/>, if any (arrows and straight highlights).</summary>
     private int? HandleAt(IEditableAnnotation annotation, Point p)
     {
         var handles = annotation.Handles;
-        if (handles.Count < 2) return null;
+        if (handles.Count != 2) return null;
         for (int i = 0; i < handles.Count; i++)
         {
             if ((handles[i] - p).Length <= Layer.HandleRadius + HitTolerance)
@@ -287,21 +293,39 @@ public partial class EditorWindow : Window
     // ---- Toolbar -------------------------------------------------------------------------
 
     private void OnToolClicked(object sender, RoutedEventArgs e)
-        => SelectTool(sender == PixelateTool ? Tool.Pixelate : sender == NumberTool ? Tool.Number : Tool.Arrow);
+        => SelectTool(sender == HighlightTool ? Tool.Highlight
+            : sender == PixelateTool ? Tool.Pixelate
+            : sender == NumberTool ? Tool.Number
+            : Tool.Arrow);
 
     private void SelectTool(Tool tool)
     {
         _tool = tool;
         Select(null);
         ArrowTool.IsChecked = tool == Tool.Arrow;
+        HighlightTool.IsChecked = tool == Tool.Highlight;
         PixelateTool.IsChecked = tool == Tool.Pixelate;
         NumberTool.IsChecked = tool == Tool.Number;
+        // The swatches show the colour the chosen tool draws with.
+        ShowColor(tool == Tool.Highlight ? _highlightColor : _color);
+    }
+
+    private void ShowColor(Color color)
+    {
+        foreach (var child in Swatches.Children)
+        {
+            if (child is RadioButton { Background: SolidColorBrush brush } swatch && brush.Color == color)
+                swatch.IsChecked = true;
+        }
     }
 
     private void OnColorChecked(object sender, RoutedEventArgs e)
     {
         if (sender is RadioButton { Background: SolidColorBrush brush })
-            _color = brush.Color;
+        {
+            if (_tool == Tool.Highlight) _highlightColor = brush.Color;
+            else _color = brush.Color;
+        }
         // Pixelate has no colour, so picking one switches back to the arrow.
         if (_tool == Tool.Pixelate) SelectTool(Tool.Arrow);
     }
@@ -415,6 +439,7 @@ public partial class EditorWindow : Window
             case Key.C when ctrl: Copy(); break;
             case Key.S when ctrl: Save(); break;
             case Key.A when !ctrl: SelectTool(Tool.Arrow); break;
+            case Key.H when !ctrl: SelectTool(Tool.Highlight); break;
             case Key.P or Key.B when !ctrl: SelectTool(Tool.Pixelate); break;
             case Key.N when !ctrl: SelectTool(Tool.Number); break;
             case >= Key.D1 and <= Key.D5 when !ctrl: SelectColor(e.Key - Key.D1); break;

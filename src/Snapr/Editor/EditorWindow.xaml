@@ -20,6 +20,10 @@
                                   IsChecked="True" Click="OnToolClicked">
                         <Path Style="{StaticResource Icon}" Data="M5,19 L19,5 M10,5 L19,5 L19,14" />
                     </ToggleButton>
+                    <ToggleButton x:Name="HighlightTool" Style="{StaticResource ToolButton}" ToolTip="{x:Static loc:Strings.ToolHighlight}"
+                                  Click="OnToolClicked">
+                        <Path Style="{StaticResource Icon}" Data="M14,3 L20,9 L11,18 L5,12 Z M5,12 L3,17 L6,18 L11,18 M3,21 H21" />
+                    </ToggleButton>
                     <ToggleButton x:Name="PixelateTool" Style="{StaticResource ToolButton}" ToolTip="{x:Static loc:Strings.ToolPixelate}"
                                   Click="OnToolClicked">
                         <Path Style="{StaticResource Icon}" StrokeThickness="0"

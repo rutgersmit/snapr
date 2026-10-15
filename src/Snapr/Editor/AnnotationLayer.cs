@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 using Snapr.Editor.Annotations;
@@ -31,9 +32,9 @@ public sealed class AnnotationLayer : FrameworkElement
 
     protected override void OnRender(DrawingContext dc)
     {
-        foreach (var annotation in Annotations)
+        var annotations = Pending is null ? Annotations : Annotations.Append(Pending);
+        foreach (var annotation in Renderer.InPaintOrder(annotations))
             annotation.Render(dc);
-        Pending?.Render(dc);
 
         if (Selected is not null) RenderSelection(dc, Selected);
     }
@@ -47,8 +48,9 @@ public sealed class AnnotationLayer : FrameworkElement
         var outline = new Pen(AccentBrush, r * 0.35) { DashStyle = new DashStyle(new double[] { 3, 2 }, 0) };
         dc.DrawRoundedRectangle(null, outline, bounds, r, r);
 
-        // A single handle is just the centre of a number; only arrows get draggable end points.
-        if (selected.Handles.Count < 2) return;
+        // Only two-point shapes (arrows, straight highlights) get draggable end points; a number has
+        // just its centre, a curved highlight is only moved as a whole.
+        if (selected.Handles.Count != 2) return;
         var handlePen = new Pen(AccentBrush, r * 0.45);
         foreach (var handle in selected.Handles)
             dc.DrawEllipse(Brushes.White, handlePen, handle, r, r);

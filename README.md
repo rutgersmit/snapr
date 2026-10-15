@@ -7,9 +7,10 @@ Een kleine screenshot-tool voor Windows, geïnspireerd op [Shottr](https://shott
 - **Sneltoets**: standaard `PrintScreen`, instelbaar via het tray-icoon › *Instellingen…*
 - **Gebied kiezen**: sleep een rechthoek, klik voor het hele scherm onder de muis, `Enter` voor alle schermen, `Esc` om te annuleren.
 - **Pijlen** (`A`) in vijf kleuren (`1`–`5`).
+- **Markeren** (`H`): een markeerstift die over tekst kleurt; de tekst blijft donker en leesbaar. Een bibberige, ongeveer rechte sleepbeweging wordt één strakke streep, die recht trekt naar horizontaal (of verticaal) als hij daar dichtbij ligt; alleen een duidelijke bocht wordt gevolgd, en dan glad gestreken. De markeerstift onthoudt zijn eigen kleur (eerst geel) en ligt altijd onder pijlen, nummers en gepixelde stukken.
 - **Pixeleren** (`P`): sleep over tekst om die onleesbaar te maken. Elk blok krijgt een beetje willekeurige ruis; dat maakt terugrekenen met tools als Depix veel lastiger, maar is geen garantie. Voor echt gevoelige gegevens (wachtwoorden, sleutels) kun je die beter helemaal buiten beeld houden.
 - **Nummers** (`N`): elke klik plaatst het volgende nummer (1, 2, 3, …) in een gekleurd afgerond vierkantje; slepen om de plek te verfijnen.
-- **Verplaatsen**: klik op een pijl of nummer om hem te selecteren en sleep hem naar een andere plek. Sleep een uiteinde van een geselecteerde pijl om richting en lengte aan te passen. `Delete` verwijdert de selectie, `Esc` deselecteert.
+- **Verplaatsen**: klik op een pijl, markering of nummer om hem te selecteren en sleep hem naar een andere plek. Sleep een uiteinde van een geselecteerde pijl of rechte markering om richting en lengte aan te passen. `Delete` verwijdert de selectie, `Esc` deselecteert.
 - Ongedaan maken / opnieuw (`Ctrl+Z` / `Ctrl+Y`), kopiëren (`Ctrl+C`), opslaan als PNG (`Ctrl+S`), sluiten (`Esc`).
 - De screenshot staat direct op het klembord; sluit je de editor na bewerken, dan staat de bewerkte versie op het klembord.
 - Optioneel automatisch starten met Windows.
